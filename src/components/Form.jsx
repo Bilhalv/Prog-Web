@@ -5,7 +5,7 @@ import Modal from "@mui/material/Modal";
 import { PlusIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 
-export const carros = []
+export var carros = []
 export default function BasicModal() {
   const [open, setOpen] = React.useState(false);
   const handleOpen = () => setOpen(true);
@@ -15,6 +15,8 @@ export default function BasicModal() {
     handleSubmit,
     formState: { errors },
   } = useForm();
+
+  let currentcarros = JSON.parse(localStorage.getItem("carros"));
 
   const onSubmit = (data) => {
     carros = [
@@ -26,6 +28,13 @@ export default function BasicModal() {
             foto: data.foto,
         },
         ];
+        console.log(carros);
+        if (currentcarros) {
+            currentcarros.push(carros[0]);
+            localStorage.setItem("carros", JSON.stringify(currentcarros));
+        } else {
+            localStorage.setItem("carros", JSON.stringify(carros));
+        }
     handleClose(); // Fechar o modal após submissão
   };
 

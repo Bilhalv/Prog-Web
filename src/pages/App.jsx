@@ -1,32 +1,20 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Card from "../components/Card";
 import BasicModal from "../components/Form";
-import { carros } from "../components/Form";
 
 function App() {
-  let totalcarros = [];
-  totalcarros.push(carros);
+  let totalcarros = JSON.parse(localStorage.getItem("carros"));
 
+  useEffect(() => {
+    if (!totalcarros) {
+      localStorage.setItem("carros", JSON.stringify([]));
+    }
+  }, []);
 
   return (
-    <main>
+    <main className="bg-gray-500">
       <Navbar titulo={"Projetos atuais"} logo={""} />
-      <div>
-        <ul>
-          {totalcarros.map((item, index) => {
-            return (
-              <div key={index} className="flex justify-between text-white">
-                <p>{item.modelo}</p>
-                <p>{item.marca}</p>
-                <p>{item.ano}</p>
-                <p>{item.preco}</p>
-                <p>{item.foto}</p>
-              </div>
-            );
-          })}
-        </ul>
-      </div>
       <Card
         titulo={"Enunciado"}
         text={"Data de Entrega: 24/10"}
@@ -37,7 +25,37 @@ function App() {
         ]}
       />
       <div className="w-[75%] bg-principal my-6 rounded-xl px-6 py-2 mx-auto shadow-md text-white">
-        <BasicModal/>
+        <BasicModal />
+      </div>
+      <div>
+        <table className="table-auto w-[75%] mx-auto text-white bg-principal">
+          <thead>
+            <tr>
+              <th className="px-4 py-2">Modelo</th>
+              <th className="px-4 py-2">Marca</th>
+              <th className="px-4 py-2">Ano</th>
+              <th className="px-4 py-2">Preço</th>
+              <th className="px-4 py-2">Foto</th>
+            </tr>
+          </thead>
+          <tbody>
+            {totalcarros.map((item, index) => {
+              let color = "bg-principal";
+              if (index % 2 === 0) {
+                color = "bg-secundaria";
+              }
+              return (
+                <tr key={index} className={color}>
+                  <td className="border px-4 py-2">{item.modelo}</td>
+                  <td className="border px-4 py-2">{item.marca}</td>
+                  <td className="border px-4 py-2">{item.ano}</td>
+                  <td className="border px-4 py-2">{item.preco}</td>
+                  <td className="border px-4 py-2"><img src={item.img}/></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </main>
   );
