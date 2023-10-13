@@ -11,7 +11,7 @@ function App() {
     if (!totalcarros) {
       localStorage.setItem("carros", JSON.stringify([]));
     }
-  }, []);
+  }, [totalcarros]); 
 
   return (
     <main className="bg-gray-500">
@@ -40,21 +40,25 @@ function App() {
             </tr>
           </thead>
           <tbody>
-            {totalcarros.map((item, index) => {
-              let color = "bg-principal";
-              if (index % 2 === 0) {
-                color = "bg-secundaria";
-              }
-              return (
-                <tr key={index} className={color}>
-                  <td className="border px-4 py-2">{item.modelo}</td>
-                  <td className="border px-4 py-2">{item.marca}</td>
-                  <td className="border px-4 py-2">{item.ano}</td>
-                  <td className="border px-4 py-2">{item.preco}</td>
-                  <td className="border px-4 py-2"><img src={item.img}/></td>
-                </tr>
-              );
-            })}
+            {totalcarros &&
+              Array.isArray(totalcarros) &&
+              totalcarros.map((item, index) => {
+                let color = "bg-principal";
+                if (index % 2 === 0) {
+                  color = "bg-secundaria";
+                }
+                return (
+                  <tr key={index} className={color}>
+                    <td className="border px-4 py-2">{item.modelo}</td>
+                    <td className="border px-4 py-2">{item.marca}</td>
+                    <td className="border px-4 py-2">{item.ano}</td>
+                    <td className="border px-4 py-2">{item.preco}</td>
+                    <td className="border px-4 py-2">
+                      <img src={item.img} alt="carro" />
+                    </td>
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </div>
