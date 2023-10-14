@@ -6,14 +6,13 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Modal from "@mui/material/Modal";
 import { BarChart3, Filter, PlusIcon } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { set, useForm } from "react-hook-form";
 export var carros = [];
 
 function FilterModal({ open, handleClose, handleFilter }) {
   const {
     register,
     handleSubmit,
-    formState: { errors },
   } = useForm();
 
   const onSubmit = (data) => {
@@ -112,10 +111,20 @@ function FilterModal({ open, handleClose, handleFilter }) {
 
 function EstatisticaModal({ open, handleClose }) {
   let totalcarros = JSON.parse(localStorage.getItem("carros"));
+  if (!totalcarros) {
+    totalcarros = [];
+  }
+  let maiorPreco = 0;
+  let maiorPrecoModelo = "";
+  let media = 0;
   let precos = totalcarros.map((carro) => carro.preco);
-  let maiorPreco = Math.max(...precos);
-  let maiorPrecoModelo = totalcarros.filter((carro) => carro.preco == maiorPreco)[0].modelo;
-  let media = precos.reduce((a, b) => a + (+b), 0)/precos.length;
+  if (totalcarros.length !== 0) {
+    maiorPreco = Math.max(...precos);
+    maiorPrecoModelo = totalcarros.filter(
+      (carro) => carro.preco == maiorPreco
+    )[0].modelo;
+    media = precos.reduce((a, b) => a + +b, 0) / precos.length;
+  }
   return (
     <Modal
       open={open}
@@ -142,7 +151,10 @@ function EstatisticaModal({ open, handleClose }) {
         <div className="p-10 w-full text-white">
           <h2>Numero de veiculos cadastrados: {precos.length}</h2>
           <h2>Preço médio dos veículos: R${media.toFixed(2)}</h2>
-          <h2>Preço do veículo de maior valor e o modelo: {maiorPrecoModelo} por R${maiorPreco.toFixed(2)}</h2>
+          <h2>
+            Preço do veículo de maior valor e o modelo: {maiorPrecoModelo} por
+            R${maiorPreco.toFixed(2)}
+          </h2>
         </div>
       </Box>
     </Modal>
@@ -155,13 +167,14 @@ function App() {
     if (!totalcarros) {
       localStorage.setItem("carros", JSON.stringify([]));
     }
+    setCarrosFiltrados(totalcarros);
   }, [totalcarros]);
   const [open, setOpen] = React.useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const [filtroAberto, setFiltroAberto] = useState(false);
   const [carrosFiltrados, setCarrosFiltrados] = useState(
-    JSON.parse(localStorage.getItem("carros"))
+    totalcarros
   );
 
   const handleFiltroOpen = () => setFiltroAberto(true);
@@ -202,7 +215,6 @@ function App() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
   } = useForm();
 
   let currentcarros = JSON.parse(localStorage.getItem("carros"));
@@ -275,9 +287,11 @@ function App() {
                         <td className="border px-4 py-2">{item.modelo}</td>
                         <td className="border px-4 py-2">{item.marca}</td>
                         <td className="border px-4 py-2">{item.ano}</td>
-                        <td className="border px-4 py-2">R$ {(+item.preco).toFixed(2)}</td>
                         <td className="border px-4 py-2">
-                          <img src={item.foto} style={{height: "50px" }} />
+                          R$ {(+item.preco).toFixed(2)}
+                        </td>
+                        <td className="border px-4 py-2">
+                          <img src={item.foto} style={{ height: "50px" }} />
                         </td>
                       </tr>
                     );
