@@ -6,7 +6,7 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Modal from "@mui/material/Modal";
 import { BarChart3, Filter, PlusIcon } from "lucide-react";
-import { set, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 export var carros = [];
 
 function FilterModal({ open, handleClose, handleFilter }) {
@@ -167,9 +167,8 @@ function App() {
     if (!totalcarros) {
       localStorage.setItem("carros", JSON.stringify([]));
     }
-    setCarrosFiltrados(totalcarros);
   }, [totalcarros]);
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const [filtroAberto, setFiltroAberto] = useState(false);
@@ -194,24 +193,26 @@ function App() {
         if (data.marca !== "" && carro.marca !== data.marca) {
           return false;
         }
-        if (data.anoMin !== "" && carro.ano < data.anoMin) {
+        if (data.anoMin !== "" && +carro.ano < +data.anoMin) {
           return false;
         }
-        if (data.anoMax !== "" && carro.ano > data.anoMax) {
+        if (data.anoMax !== "" && +carro.ano > +data.anoMax) {
           return false;
         }
-        if (data.precoMin !== "" && carro.preco < data.precoMin) {
+        if (data.precoMin !== "" && +carro.preco < +data.precoMin) {
           return false;
         }
-        if (data.precoMax !== "" && carro.preco > data.precoMax) {
+        if (data.precoMax !== "" && +carro.preco > +data.precoMax) {
           return false;
         }
+        console.log(carro);
         return true;
       }
     });
-    setCarrosFiltrados(filteredCars);
+    console.log(filteredCars);
+    setCarrosFiltrados([...filteredCars]);
+    console.log(carrosFiltrados);
   };
-
   const {
     register,
     handleSubmit,
