@@ -5,7 +5,7 @@ import Card from "../components/Card";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Modal from "@mui/material/Modal";
-import { BarChart3, Currency, Filter, PlusIcon } from "lucide-react";
+import { Currency, Filter, PlusIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 export var roteiros = [];
 
