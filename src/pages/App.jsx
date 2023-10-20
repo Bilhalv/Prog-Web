@@ -5,7 +5,7 @@ import Card from "../components/Card";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Modal from "@mui/material/Modal";
-import { Currency, Filter, PlusIcon } from "lucide-react";
+import { Filter, InfoIcon, PlusIcon, Settings } from "lucide-react";
 import { useForm } from "react-hook-form";
 export var roteiros = [];
 
@@ -53,23 +53,8 @@ function FilterModal({ open, handleClose, handleFilter }) {
               <label className="block mb-1">data:</label>
               <input
                 className="border p-5 w-full bg-secundaria rounded"
+                type="date"
                 {...register("data", { required: false })}
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block mb-1">duracao Mínimo:</label>
-              <input
-                className="border p-5 w-full bg-secundaria rounded"
-                type="number"
-                {...register("duracaoMin", { required: false })}
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block mb-1">duracao Máximo:</label>
-              <input
-                className="border p-5 w-full bg-secundaria rounded"
-                type="number"
-                {...register("duracaoMax", { required: false })}
               />
             </div>
             <div className="mb-4">
@@ -105,6 +90,45 @@ function FilterModal({ open, handleClose, handleFilter }) {
     </Modal>
   );
 }
+function InfoModal({ open, handleClose, handleinfo, roteiro }) {
+  const { register, handleSubmit } = useForm();
+
+  const onSubmit = (data) => {
+    handleinfo(data);
+    handleClose();
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={handleClose}
+      aria-labelledby="modal-modal-title"
+      aria-describedby="modal-modal-description"
+    >
+      <Box
+        sx={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "50%",
+          bgcolor: "background.paper",
+          boxShadow: 24,
+          p: 4,
+          display: "flex",
+          alignItems: "center",
+          borderRadius: "10px",
+          backgroundColor: "#230046",
+        }}
+      >
+        <div className="p-10 w-full">
+          <h1>Atrações</h1>
+          <p>{roteiro.atracoes}</p>
+        </div>
+      </Box>
+    </Modal>
+  );
+}
 
 function EditarModal({ open, handleClose, roteiro }) {
   if (!roteiro) {
@@ -114,10 +138,16 @@ function EditarModal({ open, handleClose, roteiro }) {
       duracao: "",
       preco: "",
       foto: "",
+      atracoes: "",
     };
   }
   function handleSubmit(e) {
-    roteiro.preco = e;
+    const x = localStorage.getItem("roteiros").map((item) => {
+      if (item.destino === roteiro.destino) {
+        item.preco = e.target.value;
+      }
+    });
+    localStorage.setItem("roteiros", JSON.stringify(x));
     handleClose();
   }
   return (
@@ -146,7 +176,13 @@ function EditarModal({ open, handleClose, roteiro }) {
         <div className="p-10 w-full text-white">
           <form handleSubmit={handleSubmit}>
             <label>Trocar o preço</label>
-            <input type="number">{roteiro.preco}</input>
+            <input
+              type="number"
+              placeholder={roteiro.preco}
+              onSubmit={(e) => handleSubmit(e)}
+              className="border p-5 w-full bg-secundaria rounded"
+            />
+
             <button type="submit">Trocar</button>
           </form>
         </div>
@@ -166,10 +202,13 @@ function App() {
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const [filtroAberto, setFiltroAberto] = useState(false);
+  const [infoAberto, setinfoAberto] = useState(false);
   const [roteirosFiltrados, setroteirosFiltrados] = useState(totalroteiros);
 
   const handleFiltroOpen = () => setFiltroAberto(true);
   const handleFiltroClose = () => setFiltroAberto(false);
+  const handleinfoOpen = () => setinfoAberto(true);
+  const handleinfoClose = () => setinfoAberto(false);
   const [editarAberta, seteditarAberta] = useState(false);
   const handleeditarOpen = () => seteditarAberta(true);
   const handleeditarClose = () => seteditarAberta(false);
@@ -183,12 +222,6 @@ function App() {
           return false;
         }
         if (data.data !== "" && roteiro.data !== data.data) {
-          return false;
-        }
-        if (data.duracaoMin !== "" && +roteiro.duracao < +data.duracaoMin) {
-          return false;
-        }
-        if (data.duracaoMax !== "" && +roteiro.duracao > +data.duracaoMax) {
           return false;
         }
         if (data.precoMin !== "" && +roteiro.preco < +data.precoMin) {
@@ -217,6 +250,7 @@ function App() {
         duracao: data.duracao,
         preco: data.preco,
         foto: data.foto,
+        atracoes: data.atracoes,
       },
     ];
     console.log(roteiros);
@@ -251,67 +285,33 @@ function App() {
             </IconButton>
           </div>
           <div>
-            <div>
+            <div className="flex justify-center">
               {roteirosFiltrados &&
                 Array.isArray(roteirosFiltrados) &&
                 roteirosFiltrados.map((item, index) => {
-                  let color = "bg-principal";
-                  if (index % 2 === 0) {
-                    color = "bg-secundaria";
-                  }
+                  let color = "rounded p-3 bg-secundaria m-3";
                   return (
                     <div key={index} className={color}>
-                      <td className="border px-4 py-2">{item.destino}</td>
-                      <img src={item.foto} style={{ height: "50px" }} />
-                      <td className="border px-4 py-2">{item.data}</td>
-                      <td className="border px-4 py-2">{item.duracao}</td>
-                      <td className="border px-4 py-2">
-                        R$ {(+item.preco).toFixed(2)}
-                      <IconButton
-                        color="secondary"
-                        onClick={handleeditarOpen(item)}
-                      >
-                        <Currency />
-                      </IconButton>
-                      </td>
+                      <h1 className="text-center text-lg">{item.destino}</h1>
+                      <img src={item.foto} className="w-full" />
+                      <ul className="flex-col flex justify-evenly items-center">
+                        <td className="italic">Data: {item.data}</td>
+                        <td className="italic">Duração: {item.duracao}</td>
+                        <td className="italic">
+                          Preço: R$ {(+item.preco).toFixed(2)}
+                          <IconButton
+                            color="secondary"
+                            onClick={() => handleeditarOpen(item)}
+                          >
+                            <Settings />
+                          </IconButton>
+                        </td>
+                        <td className="italic"><IconButton color="secondary" onClick={() => handleinfoOpen(item)}><InfoIcon/></IconButton></td>
+                      </ul>
                     </div>
                   );
                 })}
             </div>
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th className="px-4 py-2">destino</th>
-                  <th className="px-4 py-2">data</th>
-                  <th className="px-4 py-2">duracao</th>
-                  <th className="px-4 py-2">Preço</th>
-                  <th className="px-4 py-2">Foto</th>
-                </tr>
-              </thead>
-              <tbody>
-                {roteirosFiltrados &&
-                  Array.isArray(roteirosFiltrados) &&
-                  roteirosFiltrados.map((item, index) => {
-                    let color = "bg-principal";
-                    if (index % 2 === 0) {
-                      color = "bg-secundaria";
-                    }
-                    return (
-                      <tr key={index} className={color}>
-                        <td className="border px-4 py-2">{item.destino}</td>
-                        <td className="border px-4 py-2">{item.data}</td>
-                        <td className="border px-4 py-2">{item.duracao}</td>
-                        <td className="border px-4 py-2">
-                          R$ {(+item.preco).toFixed(2)}
-                        </td>
-                        <td className="border px-4 py-2">
-                          <img src={item.foto} style={{ height: "50px" }} />
-                        </td>
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
           </div>
           <Modal
             open={open}
@@ -403,6 +403,10 @@ function App() {
         open={filtroAberto}
         handleClose={handleFiltroClose}
         handleFilter={handleFilter}
+      />
+      <InfoModal
+        open={infoAberto}
+        handleClose={handleinfoClose}
       />
       <EditarModal open={editarAberta} handleClose={handleeditarClose} />
     </main>
