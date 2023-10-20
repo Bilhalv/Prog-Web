@@ -5,16 +5,12 @@ import Card from "../components/Card";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Modal from "@mui/material/Modal";
-import { BarChart3, Filter, PlusIcon } from "lucide-react";
+import { BarChart3, Currency, Filter, PlusIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
-export var carros = [];
-// aaa
+export var roteiros = [];
 
 function FilterModal({ open, handleClose, handleFilter }) {
-  const {
-    register,
-    handleSubmit,
-  } = useForm();
+  const { register, handleSubmit } = useForm();
 
   const onSubmit = (data) => {
     handleFilter(data);
@@ -47,33 +43,33 @@ function FilterModal({ open, handleClose, handleFilter }) {
         <div className="p-10 w-full">
           <form className="text-white" onSubmit={handleSubmit(onSubmit)}>
             <div className="mb-4">
-              <label className="block mb-1">Modelo:</label>
+              <label className="block mb-1">destino:</label>
               <input
                 className="border p-5 w-full bg-secundaria rounded"
-                {...register("modelo", { required: false })}
+                {...register("destino", { required: false })}
               />
             </div>
             <div className="mb-4">
-              <label className="block mb-1">Marca:</label>
+              <label className="block mb-1">data:</label>
               <input
                 className="border p-5 w-full bg-secundaria rounded"
-                {...register("marca", { required: false })}
+                {...register("data", { required: false })}
               />
             </div>
             <div className="mb-4">
-              <label className="block mb-1">Ano Mínimo:</label>
+              <label className="block mb-1">duracao Mínimo:</label>
               <input
                 className="border p-5 w-full bg-secundaria rounded"
                 type="number"
-                {...register("anoMin", { required: false })}
+                {...register("duracaoMin", { required: false })}
               />
             </div>
             <div className="mb-4">
-              <label className="block mb-1">Ano Máximo:</label>
+              <label className="block mb-1">duracao Máximo:</label>
               <input
                 className="border p-5 w-full bg-secundaria rounded"
                 type="number"
-                {...register("anoMax", { required: false })}
+                {...register("duracaoMax", { required: false })}
               />
             </div>
             <div className="mb-4">
@@ -110,21 +106,19 @@ function FilterModal({ open, handleClose, handleFilter }) {
   );
 }
 
-function EstatisticaModal({ open, handleClose }) {
-  let totalcarros = JSON.parse(localStorage.getItem("carros"));
-  if (!totalcarros) {
-    totalcarros = [];
+function EditarModal({ open, handleClose, roteiro }) {
+  if (!roteiro) {
+    roteiro = {
+      destino: "",
+      data: "",
+      duracao: "",
+      preco: "",
+      foto: "",
+    };
   }
-  let maiorPreco = 0;
-  let maiorPrecoModelo = "";
-  let media = 0;
-  let precos = totalcarros.map((carro) => carro.preco);
-  if (totalcarros.length !== 0) {
-    maiorPreco = Math.max(...precos);
-    maiorPrecoModelo = totalcarros.filter(
-      (carro) => carro.preco == maiorPreco
-    )[0].modelo;
-    media = precos.reduce((a, b) => a + +b, 0) / precos.length;
+  function handleSubmit(e) {
+    roteiro.preco = e;
+    handleClose();
   }
   return (
     <Modal
@@ -150,12 +144,11 @@ function EstatisticaModal({ open, handleClose }) {
         }}
       >
         <div className="p-10 w-full text-white">
-          <h2>Numero de veiculos cadastrados: {precos.length}</h2>
-          <h2>Preço médio dos veículos: R${media.toFixed(2)}</h2>
-          <h2>
-            Preço do veículo de maior valor e o modelo: {maiorPrecoModelo} por
-            R${maiorPreco.toFixed(2)}
-          </h2>
+          <form handleSubmit={handleSubmit}>
+            <label>Trocar o preço</label>
+            <input type="number">{roteiro.preco}</input>
+            <button type="submit">Trocar</button>
+          </form>
         </div>
       </Box>
     </Modal>
@@ -163,80 +156,75 @@ function EstatisticaModal({ open, handleClose }) {
 }
 
 function App() {
-  let totalcarros = JSON.parse(localStorage.getItem("carros"));
+  let totalroteiros = JSON.parse(localStorage.getItem("roteiros"));
   useEffect(() => {
-    if (!totalcarros) {
-      localStorage.setItem("carros", JSON.stringify([]));
+    if (!totalroteiros) {
+      localStorage.setItem("roteiros", JSON.stringify([]));
     }
-  }, [totalcarros]);
+  }, [totalroteiros]);
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const [filtroAberto, setFiltroAberto] = useState(false);
-  const [carrosFiltrados, setCarrosFiltrados] = useState(
-    totalcarros
-  );
+  const [roteirosFiltrados, setroteirosFiltrados] = useState(totalroteiros);
 
   const handleFiltroOpen = () => setFiltroAberto(true);
   const handleFiltroClose = () => setFiltroAberto(false);
-  const [estatisticaAberta, setEstatisticaAberta] = useState(false);
-  const handleEstatisticaOpen = () => setEstatisticaAberta(true);
-  const handleEstatisticaClose = () => setEstatisticaAberta(false);
+  const [editarAberta, seteditarAberta] = useState(false);
+  const handleeditarOpen = () => seteditarAberta(true);
+  const handleeditarClose = () => seteditarAberta(false);
 
   const handleFilter = (data) => {
-    const filteredCars = totalcarros.filter((carro) => {
+    const filteredCars = totalroteiros.filter((roteiro) => {
       if (data.verTodos === true) {
         return true;
       } else {
-        if (data.modelo !== "" && carro.modelo !== data.modelo) {
+        if (data.destino !== "" && roteiro.destino !== data.destino) {
           return false;
         }
-        if (data.marca !== "" && carro.marca !== data.marca) {
+        if (data.data !== "" && roteiro.data !== data.data) {
           return false;
         }
-        if (data.anoMin !== "" && +carro.ano < +data.anoMin) {
+        if (data.duracaoMin !== "" && +roteiro.duracao < +data.duracaoMin) {
           return false;
         }
-        if (data.anoMax !== "" && +carro.ano > +data.anoMax) {
+        if (data.duracaoMax !== "" && +roteiro.duracao > +data.duracaoMax) {
           return false;
         }
-        if (data.precoMin !== "" && +carro.preco < +data.precoMin) {
+        if (data.precoMin !== "" && +roteiro.preco < +data.precoMin) {
           return false;
         }
-        if (data.precoMax !== "" && +carro.preco > +data.precoMax) {
+        if (data.precoMax !== "" && +roteiro.preco > +data.precoMax) {
           return false;
         }
-        console.log(carro);
+        console.log(roteiro);
         return true;
       }
     });
     console.log(filteredCars);
-    setCarrosFiltrados([...filteredCars]);
-    console.log(carrosFiltrados);
+    setroteirosFiltrados([...filteredCars]);
+    console.log(roteirosFiltrados);
   };
-  const {
-    register,
-    handleSubmit,
-  } = useForm();
+  const { register, handleSubmit } = useForm();
 
-  let currentcarros = JSON.parse(localStorage.getItem("carros"));
+  let currentroteiros = JSON.parse(localStorage.getItem("roteiros"));
 
   const onSubmit = (data) => {
-    carros = [
+    roteiros = [
       {
-        modelo: data.modelo,
-        marca: data.marca,
-        ano: data.ano,
+        destino: data.destino,
+        data: data.data,
+        duracao: data.duracao,
         preco: data.preco,
         foto: data.foto,
       },
     ];
-    console.log(carros);
-    if (currentcarros) {
-      currentcarros.push(carros[0]);
-      localStorage.setItem("carros", JSON.stringify(currentcarros));
+    console.log(roteiros);
+    if (currentroteiros) {
+      currentroteiros.push(roteiros[0]);
+      localStorage.setItem("roteiros", JSON.stringify(currentroteiros));
     } else {
-      localStorage.setItem("carros", JSON.stringify(carros));
+      localStorage.setItem("roteiros", JSON.stringify(roteiros));
     }
     handleClose();
   };
@@ -244,12 +232,12 @@ function App() {
     <main className="bg-gray-500 h-screen">
       <Navbar titulo={"Projetos atuais"} logo={""} />
       <Card
-        titulo={"Enunciado"}
+        titulo={"Opção 2"}
         text={"Data de Entrega: 24/10"}
         lista={[
-          "- Fazer um cadastro de veículos para uma revenda, semelhante ao cadastro de pizzas (usando Modal, lista de dados com os atributos: Modelo, Marca, Ano, Preço e Foto).",
-          "- Acrescentar um campo de filtro (a escolha do aluno, pode ser por modelo, marca, limite de ano, limite (inferior e/ou superior) de preço) e os botões Filtrar e Ver Todos.",
-          "- Acrescentar um botão de Estatística que deve exibir em uma nova janela modal ou sweetAlert2 o número de veículos cadastrados, preço médio dos veículos e o modelo e preço do veículo de maior valor.",
+          "- Desenvolver um cadastro de roteiros de viagens para uma agência de turismo, com as opções de incluir, consultar e excluir roteiros (usando janela Modal e lista de dados com os atributos: Destino, Data, Duração, Preço, Atrações e Foto). O atributo atrações não deve ser exibido na listagem, apenas quando o usuário clicar no botão consultar (ver detalhes).",
+          "- Acrescentar um campo de filtro (a escolha do aluno) e os botões Filtrar e Ver Todos.",
+          "- Acrescentar um botão para alterar o preço de determinada viagem. Acrescentar um botão Alterar em cada viagem da lista e quando este botão for clicado solicitar (via prompt ou SweetAlert2) o novo preço desta viagem",
         ]}
       />
       <div className="w-[75%] bg-principal my-6 rounded-xl px-6 py-6 mx-auto shadow-md text-white flex-col">
@@ -261,34 +249,58 @@ function App() {
             <IconButton color="info" onClick={handleFiltroOpen}>
               <Filter />
             </IconButton>
-            <IconButton color="secondary" onClick={handleEstatisticaOpen}>
-              <BarChart3 />
-            </IconButton>
           </div>
           <div>
+            <div>
+              {roteirosFiltrados &&
+                Array.isArray(roteirosFiltrados) &&
+                roteirosFiltrados.map((item, index) => {
+                  let color = "bg-principal";
+                  if (index % 2 === 0) {
+                    color = "bg-secundaria";
+                  }
+                  return (
+                    <div key={index} className={color}>
+                      <td className="border px-4 py-2">{item.destino}</td>
+                      <img src={item.foto} style={{ height: "50px" }} />
+                      <td className="border px-4 py-2">{item.data}</td>
+                      <td className="border px-4 py-2">{item.duracao}</td>
+                      <td className="border px-4 py-2">
+                        R$ {(+item.preco).toFixed(2)}
+                      <IconButton
+                        color="secondary"
+                        onClick={handleeditarOpen(item)}
+                      >
+                        <Currency />
+                      </IconButton>
+                      </td>
+                    </div>
+                  );
+                })}
+            </div>
             <table className="w-full">
               <thead>
                 <tr>
-                  <th className="px-4 py-2">Modelo</th>
-                  <th className="px-4 py-2">Marca</th>
-                  <th className="px-4 py-2">Ano</th>
+                  <th className="px-4 py-2">destino</th>
+                  <th className="px-4 py-2">data</th>
+                  <th className="px-4 py-2">duracao</th>
                   <th className="px-4 py-2">Preço</th>
                   <th className="px-4 py-2">Foto</th>
                 </tr>
               </thead>
               <tbody>
-                {carrosFiltrados &&
-                  Array.isArray(carrosFiltrados) &&
-                  carrosFiltrados.map((item, index) => {
+                {roteirosFiltrados &&
+                  Array.isArray(roteirosFiltrados) &&
+                  roteirosFiltrados.map((item, index) => {
                     let color = "bg-principal";
                     if (index % 2 === 0) {
                       color = "bg-secundaria";
                     }
                     return (
                       <tr key={index} className={color}>
-                        <td className="border px-4 py-2">{item.modelo}</td>
-                        <td className="border px-4 py-2">{item.marca}</td>
-                        <td className="border px-4 py-2">{item.ano}</td>
+                        <td className="border px-4 py-2">{item.destino}</td>
+                        <td className="border px-4 py-2">{item.data}</td>
+                        <td className="border px-4 py-2">{item.duracao}</td>
                         <td className="border px-4 py-2">
                           R$ {(+item.preco).toFixed(2)}
                         </td>
@@ -326,27 +338,27 @@ function App() {
               <div className="p-10">
                 <form className="text-white" onSubmit={handleSubmit(onSubmit)}>
                   <div className="mb-4">
-                    <label className="block mb-1">Modelo:</label>
+                    <label className="block mb-1">Destino:</label>
                     <input
                       className="border p-5 w-full bg-secundaria rounded"
-                      {...register("modelo", { required: true })}
+                      {...register("destino", { required: true })}
                     />
                   </div>
 
                   <div className="mb-4">
-                    <label className="block mb-1">Marca:</label>
+                    <label className="block mb-1">Data:</label>
                     <input
+                      type="date"
                       className="border p-5 w-full bg-secundaria rounded"
-                      {...register("marca", { required: true })}
+                      {...register("data", { required: true })}
                     />
                   </div>
 
                   <div className="mb-4">
-                    <label className="block mb-1">Ano:</label>
+                    <label className="block mb-1">Duração:</label>
                     <input
                       className="border p-5 w-full bg-secundaria rounded"
-                      type="number"
-                      {...register("ano", { required: true })}
+                      {...register("duracao", { required: true })}
                     />
                   </div>
 
@@ -363,8 +375,15 @@ function App() {
                     <label className="block mb-1">Foto:</label>
                     <input
                       className="border p-5 w-full bg-secundaria rounded"
-                      type="text"
                       {...register("foto", { required: true })}
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block mb-1">Atrações:</label>
+                    <input
+                      className="border p-5 w-full bg-secundaria rounded"
+                      {...register("atracoes", { required: true })}
                     />
                   </div>
 
@@ -372,7 +391,7 @@ function App() {
                     type="submit"
                     className="bg-secundaria px-4 py-2 rounded"
                   >
-                    Adicionar Carro
+                    Adicionar roteiro de viagem
                   </button>
                 </form>
               </div>
@@ -385,10 +404,7 @@ function App() {
         handleClose={handleFiltroClose}
         handleFilter={handleFilter}
       />
-      <EstatisticaModal
-        open={estatisticaAberta}
-        handleClose={handleEstatisticaClose}
-      />
+      <EditarModal open={editarAberta} handleClose={handleeditarClose} />
     </main>
   );
 }
