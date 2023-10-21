@@ -90,14 +90,8 @@ function FilterModal({ open, handleClose, handleFilter }) {
     </Modal>
   );
 }
-function InfoModal({ open, handleClose, handleinfo, roteiro }) {
-  const { register, handleSubmit } = useForm();
 
-  const onSubmit = (data) => {
-    handleinfo(data);
-    handleClose();
-  };
-
+function InfoModal({ open, handleClose, roteiro }) {
   return (
     <Modal
       open={open}
@@ -121,9 +115,13 @@ function InfoModal({ open, handleClose, handleinfo, roteiro }) {
           backgroundColor: "#230046",
         }}
       >
-        <div className="p-10 w-full">
+        <div className="w-full text-white">
           <h1>Atrações</h1>
-          <p>{roteiro.atracoes}</p>
+          {roteiro && roteiro.atracoes ? (
+            <p>{roteiro.atracoes}</p>
+          ) : (
+            <p>Atrações not available.</p>
+          )}
         </div>
       </Box>
     </Modal>
@@ -142,14 +140,16 @@ function EditarModal({ open, handleClose, roteiro }) {
     };
   }
   function handleSubmit(e) {
-    const x = localStorage.getItem("roteiros").map((item) => {
-      if (item.destino === roteiro.destino) {
+    const updatedRoteiros = totalroteiros.map((item) => {
+      if (item.destino === selectedRoteiro.destino) {
         item.preco = e.target.value;
       }
+      return item;
     });
-    localStorage.setItem("roteiros", JSON.stringify(x));
+    localStorage.setItem("roteiros", JSON.stringify(updatedRoteiros));
     handleClose();
   }
+
   return (
     <Modal
       open={open}
@@ -210,8 +210,16 @@ function App() {
   const handleinfoOpen = () => setinfoAberto(true);
   const handleinfoClose = () => setinfoAberto(false);
   const [editarAberta, seteditarAberta] = useState(false);
-  const handleeditarOpen = () => seteditarAberta(true);
   const handleeditarClose = () => seteditarAberta(false);
+  const [selectedRoteiro, setSelectedRoteiro] = useState(null);
+  const [precoToChange, setPrecoToChange] = useState("");
+
+  const handleeditarOpen = (item, preco) => {
+    // Set the selected roteiro and its preco to the state
+    setSelectedRoteiro(item);
+    setPrecoToChange(preco);
+    seteditarAberta(true);
+  };
 
   const handleFilter = (data) => {
     const filteredCars = totalroteiros.filter((roteiro) => {
@@ -301,12 +309,17 @@ function App() {
                           Preço: R$ {(+item.preco).toFixed(2)}
                           <IconButton
                             color="secondary"
-                            onClick={() => handleeditarOpen(item)}
+                            onClick={() => handleeditarOpen(item, item.preco)}
                           >
                             <Settings />
                           </IconButton>
                         </td>
-                        <td className="italic"><IconButton color="secondary" onClick={() => handleinfoOpen(item)}><InfoIcon/></IconButton></td>
+                        <IconButton
+                          color="secondary"
+                          onClick={() => handleinfoOpen(item)}
+                        >
+                          <InfoIcon />
+                        </IconButton>
                       </ul>
                     </div>
                   );
@@ -404,10 +417,7 @@ function App() {
         handleClose={handleFiltroClose}
         handleFilter={handleFilter}
       />
-      <InfoModal
-        open={infoAberto}
-        handleClose={handleinfoClose}
-      />
+      <InfoModal open={infoAberto} handleClose={handleinfoClose} />
       <EditarModal open={editarAberta} handleClose={handleeditarClose} />
     </main>
   );
