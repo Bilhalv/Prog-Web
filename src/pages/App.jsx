@@ -91,7 +91,7 @@ function FilterModal({ open, handleClose, handleFilter }) {
   );
 }
 
-function InfoModal({ open, handleClose, roteiro }) {
+function InfoModal({ open, handleClose, selectedRoteiro }) {
   return (
     <Modal
       open={open}
@@ -117,8 +117,8 @@ function InfoModal({ open, handleClose, roteiro }) {
       >
         <div className="w-full text-white">
           <h1>Atrações</h1>
-          {roteiro && roteiro.atracoes ? (
-            <p>{roteiro.atracoes}</p>
+          {selectedRoteiro && selectedRoteiro.atracoes ? (
+            <p>{selectedRoteiro.atracoes}</p>
           ) : (
             <p>Atrações not available.</p>
           )}
@@ -128,26 +128,20 @@ function InfoModal({ open, handleClose, roteiro }) {
   );
 }
 
-function EditarModal({ open, handleClose, roteiro }) {
-  if (!roteiro) {
-    roteiro = {
-      destino: "",
-      data: "",
-      duracao: "",
-      preco: "",
-      foto: "",
-      atracoes: "",
-    };
-  }
+function EditarModal({
+  open,
+  handleClose,
+  selectedRoteiro,
+  handleUpdatePrice,
+}) {
+  const [newPrice, setNewPrice] = useState("");
+
   function handleSubmit(e) {
-    const updatedRoteiros = totalroteiros.map((item) => {
-      if (item.destino === selectedRoteiro.destino) {
-        item.preco = e.target.value;
-      }
-      return item;
-    });
-    localStorage.setItem("roteiros", JSON.stringify(updatedRoteiros));
-    handleClose();
+    e.preventDefault();
+    if (newPrice) {
+      handleUpdatePrice(newPrice);
+      handleClose();
+    }
   }
 
   return (
@@ -174,15 +168,15 @@ function EditarModal({ open, handleClose, roteiro }) {
         }}
       >
         <div className="p-10 w-full text-white">
-          <form handleSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit}>
             <label>Trocar o preço</label>
             <input
               type="number"
-              placeholder={roteiro.preco}
-              onSubmit={(e) => handleSubmit(e)}
+              placeholder={selectedRoteiro.preco}
               className="border p-5 w-full bg-secundaria rounded"
+              value={newPrice}
+              onChange={(e) => setNewPrice(e.target.value)}
             />
-
             <button type="submit">Trocar</button>
           </form>
         </div>
@@ -199,7 +193,10 @@ function App() {
     }
   }, [totalroteiros]);
   const [open, setOpen] = useState(false);
-  const handleOpen = () => setOpen(true);
+  const handleOpen = () => {
+    setroteirosFiltrados(roteirosFiltrados);  
+    setOpen(true)
+  };
   const handleClose = () => setOpen(false);
   const [filtroAberto, setFiltroAberto] = useState(false);
   const [infoAberto, setinfoAberto] = useState(false);
@@ -207,18 +204,35 @@ function App() {
 
   const handleFiltroOpen = () => setFiltroAberto(true);
   const handleFiltroClose = () => setFiltroAberto(false);
-  const handleinfoOpen = () => setinfoAberto(true);
+  const handleinfoOpen = (item) => {
+    setSelectedRoteiro(item);
+    setinfoAberto(true);
+  };
+
   const handleinfoClose = () => setinfoAberto(false);
   const [editarAberta, seteditarAberta] = useState(false);
   const handleeditarClose = () => seteditarAberta(false);
-  const [selectedRoteiro, setSelectedRoteiro] = useState(null);
+  const [selectedRoteiro, setSelectedRoteiro] = useState("");
   const [precoToChange, setPrecoToChange] = useState("");
 
   const handleeditarOpen = (item, preco) => {
-    // Set the selected roteiro and its preco to the state
     setSelectedRoteiro(item);
     setPrecoToChange(preco);
     seteditarAberta(true);
+  };
+
+  const handleUpdatePrice = (newPrice) => {
+    if (selectedRoteiro) {
+      const updatedRoteiros = totalroteiros.map((item) => {
+        if (item.destino === selectedRoteiro.destino) {
+          item.preco = newPrice;
+        }
+        return item;
+      });
+      localStorage.setItem("roteiros", JSON.stringify(updatedRoteiros));
+      setroteirosFiltrados(updatedRoteiros);
+      setSelectedRoteiro({ ...selectedRoteiro, preco: newPrice });
+    }
   };
 
   const handleFilter = (data) => {
@@ -248,8 +262,6 @@ function App() {
   };
   const { register, handleSubmit } = useForm();
 
-  let currentroteiros = JSON.parse(localStorage.getItem("roteiros"));
-
   const onSubmit = (data) => {
     roteiros = [
       {
@@ -261,10 +273,9 @@ function App() {
         atracoes: data.atracoes,
       },
     ];
-    console.log(roteiros);
-    if (currentroteiros) {
-      currentroteiros.push(roteiros[0]);
-      localStorage.setItem("roteiros", JSON.stringify(currentroteiros));
+    if (roteirosFiltrados) {
+      roteirosFiltrados.push(roteiros[0]);
+      localStorage.setItem("roteiros", JSON.stringify(roteirosFiltrados));
     } else {
       localStorage.setItem("roteiros", JSON.stringify(roteiros));
     }
@@ -293,13 +304,12 @@ function App() {
             </IconButton>
           </div>
           <div>
-            <div className="flex justify-center">
+            <div className="flex-col justify-center">
               {roteirosFiltrados &&
                 Array.isArray(roteirosFiltrados) &&
                 roteirosFiltrados.map((item, index) => {
-                  let color = "rounded p-3 bg-secundaria m-3";
                   return (
-                    <div key={index} className={color}>
+                    <div key={index} className="rounded p-3 bg-secundaria m-3">
                       <h1 className="text-center text-lg">{item.destino}</h1>
                       <img src={item.foto} className="w-full" />
                       <ul className="flex-col flex justify-evenly items-center">
@@ -417,8 +427,18 @@ function App() {
         handleClose={handleFiltroClose}
         handleFilter={handleFilter}
       />
-      <InfoModal open={infoAberto} handleClose={handleinfoClose} />
-      <EditarModal open={editarAberta} handleClose={handleeditarClose} />
+      <InfoModal
+        open={infoAberto}
+        handleClose={handleinfoClose}
+        selectedRoteiro={selectedRoteiro}
+      />
+      <EditarModal
+        open={editarAberta}
+        handleClose={handleeditarClose}
+        selectedRoteiro={selectedRoteiro}
+        precoToChange={precoToChange}
+        handleUpdatePrice={handleUpdatePrice}
+      />
     </main>
   );
 }
